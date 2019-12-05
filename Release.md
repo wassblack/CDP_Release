@@ -1,10 +1,10 @@
 ## Version 0.1.0 (08/11/19)
-Vous pouvez télécharger cette version du projet [ici](https://github.com/wassblack/CDP_Release/archive/704dcde8ca7dd2d8e9affc78dd19fec50904e4a7.zip).
+Vous pouvez télécharger cette version du projet [ici](https://github.com/wassblack/CDP_Release/archive/v0.1.0.zip).
 * Issues réalisées : 1, 2, 3, 4, 5, 6
 
 ## Version 0.2.0 (22/11/19)
-Vous pouvez télécharger cette version du projet [ici](https://github.com/wassblack/CDP_Release/archive/e80f369717c6a673b5d9f105518110ee5b7d2552.zip).
-* Issues réalisées : 7, 8, 9, 10, 11, 12, 13, 14
+Vous pouvez télécharger cette version du projet [ici](https://github.com/wassblack/CDP_Release/archive/0.2.0.zip).
+* Issues réalisées : 7, 8, 9, 10, 11, 12
 
 ## Installation et lancement de ScrumIt
 
@@ -18,7 +18,7 @@ Sous Linux, vous pouvez installer les deux en tapant `apt install nodejs`.
 
 ### Avec Docker
 
-Vous devez avoir `docker` d'installé.  Vous pouvez l'installer en cliquant [ici](https://hub.docker.com/?overlay=onboarding) sous Windows ou en tapant `apt install docker-ce` sous Linux.
+Vous devez avoir `docker` d'installé.  Vous pouvez l'installer en suivant la procédure d'installation décrite [ici](https://docs.docker.com/install/linux/docker-ce/ubuntu/) pour les systèmes Linux et [ici](https://docs.docker.com/docker-for-windows/install/) pour Windows.
 
 * Placez-vous dans le répertoire contenant le fichier *docker-compose.yml* et taper `docker-compose up`
-* Vous pouvez ensuite ouvrir un navigateur Web et entrer l'IP de votre machine docker, ce qui vous affichera la page de connexion.
+* Vous pouvez ensuite ouvrir un navigateur Web et aller à l'adresse `localhost:3000` qui vous affichera la page de connexion.
