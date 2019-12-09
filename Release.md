@@ -16,6 +16,13 @@ Vous pouvez télécharger cette version du projet [ici](https://github.com/wassb
 * Documentation administrateur : [doc-admin_0.2.0.pdf](https://github.com/wassblack/CDP_Release/files/3927516/doc-admin_v0.2.0.pdf)
 * Documentation utilisateur : [doc-user_0.2.0.pdf](https://github.com/wassblack/CDP_Release/files/3927518/doc-user_v0.2.0.pdf)
 
+## Version 0.3.0 (10/12/19)
+Vous pouvez télécharger cette version du projet ici.
+* Issues réalisées : 13, 14, 15, 16
+* Architecture de l'application :
+* Documentation administrateur : 
+* Documentation utilisateur : 
+
 ## Installation et lancement de ScrumIt
 
 ### Avec npm 
