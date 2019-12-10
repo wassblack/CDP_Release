@@ -1,243 +1,472 @@
 const express = require('express');
 const router = express.Router();
-const moment = require('moment');
-const ModelProject = require('../models/project');
-const ModelUser = require('../models/user');
-const ModelUserStory = require('../models/userStory');
-const ModelTask = require('../models/task');
+const controllerTask = require('../controller/controller.task');
+const controllerProject = require('../controller/controller.project');
+const controllerTests = require('../controller/controller.tests');
 const { ensureAuthenticated } = require('../config/authenticated');
 
-// Page displaying the main information about the selected project
-router.get('/project/:projectId', ensureAuthenticated, (req, res) => {
-    let projectId = req.params.projectId;
-    renderProjectPage(res, projectId);
-});
+/**
+ * @swagger
+ * /project/{projectId}:
+ *  get:
+ *    description: Page displaying the main information about the selected project
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *  responses:
+ *    200':
+ *      description: display success
+ */
+router.get('/project/:projectId', ensureAuthenticated, controllerProject.displayProject);
 
-// Modify Project
-router.get('/project/:projectId/ModifyProject', ensureAuthenticated, (req, res) => {
-    ModelProject.findOne({ _id: req.params.projectId }).then(project => {
-        res.render('modifyProject', {
-            project: project
-        });
-    }).catch(err => console.log(err));
+/**
+ * @swagger
+ * /project/{projectId}/ModifyProject:
+ *  get:
+ *    description: Page displaying the modification form of the selected project
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *  responses:
+ *    200':
+ *      description: display success
+ */
+router.get('/project/:projectId/ModifyProject', ensureAuthenticated, controllerProject.displayModifyProject);
 
-});
-// Modification of the name or description of the selected project
-router.post('/project/:projectId', ensureAuthenticated, (req, res) => {
-    const projectId = req.params.projectId;
-    const newProjectName = req.body.projectName;
-    const newProjectDescription = req.body.projectDesc;
+/**
+ * @swagger
+ * /project/{projectId}:
+ *  post:
+ *    description: Update project name or description
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *      - in: formData
+ *        name: projectName
+ *        schema:
+ *          type: string
+ *        description:  New project name
+ *      - in: formData
+ *        name: projectDesc
+ *        schema:
+ *          type: string
+ *        description:  New project description
+ *  responses:
+ *    200':
+ *      description: success, redirect to main page
+ */
+router.post('/project/:projectId', ensureAuthenticated, controllerProject.modifyProject);
 
-    let errors = [];
+/**
+ * @swagger
+ * /project/{projectId}/delete:
+ *  get:
+ *    description: Deletes the selected project
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *  responses:
+ *    200':
+ *      description: display the main page
+ */
+router.get('/project/:projectId/delete', ensureAuthenticated, controllerProject.deleteProject);
 
-    if (newProjectName) {
-        if (newProjectName.length > 40) {
-            errors.push({ msg: 'Le nom de votre projet doit être inférieur à 40 caractères' });
-        }
-    }
-    else {
-        errors.push({ msg: 'Vous devez renseigner un nom pour le projet' });
-    }
+/**
+ * @swagger
+ * /project/{projectId}/addUser:
+ *  get:
+ *    description: Display add a user to a project form
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *  responses:
+ *    200':
+ *      description: displays the add user to project page
+ */
+router.get('/project/:projectId/addUser', ensureAuthenticated, controllerProject.displayAddUser);
 
-    if (newProjectDescription && newProjectDescription.length > 300) {
-        errors.push({ msg: 'La description de votre projet doit prendre moins de 300 caractères' });
-    }
+/**
+ * @swagger
+ * /project/{projectId}/addUser:
+ *  post:
+ *    description: Adds a user to a project 
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *      - in: formData
+ *        name: newUser
+ *        schema:
+ *          type: string
+ *        description: email of the user to add
+ *  responses:
+ *    200':
+ *      description: success, displays the add user to project page
+ */
+router.post('/project/:projectId/addUser', ensureAuthenticated, controllerProject.addUserToProject);
 
-    if (errors.length === 0) {
-        ModelProject.updateOne({ _id: projectId }, { name: newProjectName, description: newProjectDescription })
-            .then(_ => renderProjectPage(res, projectId));
-    }
-    else {
-        ModelProject.findOne({ _id: req.params.projectId }).then(project => {
-            res.render('modifyProject', {
-                errors,
-                project: project
-            });
-        });
-    }
-});
+/**
+ * @swagger
+ * /project/{projectId}/createTask:
+ *  get:
+ *    description:  Display create task form
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *  responses:
+ *    200':
+ *      description: displays the create task page
+ */
+router.get('/project/:projectId/createTask', ensureAuthenticated, controllerTask.displayCreateTask);
 
-router.get('/project/:projectId/delete', ensureAuthenticated, (req, res) => {
-    ModelProject.deleteOne({ _id: req.params.projectId }, function () { })
-        .then(_ => {
-            ModelProject.find({ 'users.email': req.user.email })
-                .then(projects => {
-                    res.render('index', {
-                        user: req.user,
-                        projects: projects
-                    });
-                })
-                .catch(err => console.log(err));
-        });
+/**
+ * @swagger
+ * /project/{projectId}/modifyTask/{taskId}:
+ *  get:
+ *    description: Display modify task form
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *      - in: path
+ *        name: taskId
+ *        schema:
+ *          type: string
+ *        description: id of the task to modify
+ *  responses:
+ *    200':
+ *      description: displays the update task page
+ */
+router.get('/project/:projectId/modifyTask/:taskId', ensureAuthenticated, controllerTask.displayModifyTask);
 
-});
+/**
+ * @swagger
+ * /project/{projectId}/modifyTask/{taskId}:
+ *  post:
+ *    description: Updates an existing task
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *      - in: path
+ *        name: taskId
+ *        schema:
+ *          type: string
+ *        description: Id of the task
+ *      - in: formData
+ *        name: description
+ *        schema:
+ *          type: string
+ *        description: New task description
+ *      - in: formData
+ *        name: developerId
+ *        schema:
+ *          type: string
+ *        description: New task developer
+ *      - in: formData
+ *        name: state
+ *        schema:
+ *          type: number
+ *        description: New task state     
+ *  responses:
+ *    200':
+ *      description: success, displays the main project page
+ */
+router.post('/project/:projectId/modifyTask/:taskId', ensureAuthenticated, controllerTask.modifyTask);
 
-router.get('/project/:projectId/addUser', ensureAuthenticated, (req, res) => {
-    res.render('addUser', {
-        projectId: req.params.projectId,
-        user: req.user
-    });
-});
+/**
+ * @swagger
+ * /project/{projectId}/createTask:
+ *  post:
+ *    description: Creates a new task
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *      - in: formData
+ *        name: description
+ *        schema:
+ *          type: string
+ *        description: task description
+ *      - in: formData
+ *        name: developerId
+ *        schema:
+ *          type: string
+ *        description: task developer id
+ *      - in: formData
+ *        name: task state
+ *        schema:
+ *          type: number
+ *        description: task state      
+ *  responses:
+ *    200':
+ *      description: success, displays the main project page
+ */
+router.post('/project/:projectId/createTask', ensureAuthenticated, controllerTask.createTask);
 
-router.post('/project/:projectId/addUser', ensureAuthenticated, (req, res) => {
-    const projectId = req.body.projectId;
-    const newUser = req.body.newUser;
-    const errors = [];
+/**
+ * @swagger
+ * /project/{projectId}/deleteTask/{taskId}:
+ *  get:
+ *    description:  Deletes the selected task
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *      - in: path
+ *        name: taskId
+ *        schema:
+ *          type: string
+ *        description: Id of the task
+ *  responses:
+ *    200':
+ *      description: displays the main project page
+ */
+router.get('/project/:projectId/deleteTask/:taskId', ensureAuthenticated, controllerTask.deleteTask);
 
-    ModelUser.findOne({ email: newUser })
-        .then(user => {
-            if (user) {
-                // User is registered
-                var userToadd = { email: newUser };
-                ModelProject.find({ _id: projectId, users: { $elemMatch: { email: newUser } } })
-                    .then(project => {
-                        // Checking if user already assigned to the project
-                        if (project.length > 0) {
-                            errors.push({ msg: 'L\'utilisateur est déjà un collaborateur du projet' });
-                        } else {
-                            ModelProject.updateOne({ _id: projectId },
-                                { $push: { users: userToadd } }, (succ, err) => {
-                                    if (err) {
-                                        errors.push({ msg: 'Ajout non effectué' + err });
-                                    }
-                                }
-                            );
-                        }
-                    }).catch(err => console.log("Couldn't find the project: " + err));
+/**
+ * @swagger
+ * /project/{projectId}/linkTask/{taskId}:
+ *  post:
+ *    description: link a task to an existing userStory
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *      - in: path
+ *        name: taskId
+ *        schema:
+ *          type: string
+ *        description: Id of the task
+ *      - in: formData
+ *        name: selectedUs
+ *        schema:
+ *          type: json
+ *        description: User story to link
+ *  responses:
+ *    200':
+ *      description: success, displays the main project page
+ */
+router.post('/project/:projectId/linkTask/:taskId', ensureAuthenticated, controllerTask.linkTask);
 
-            } else {
-                errors.push({ msg: 'L\'utilisateur n\'existe pas' });
-            }
-        }).catch(err => console.log("Couldn't find the user: " + err));
-    if (errors.length > 0) {
-        res.render('/project/:projectId/addUser', {
-            projectId: projectId,
-            errors: errors,
-            user: req.user
-        });
-    } else {
-        res.redirect('/');
-    }
+/**
+ * @swagger
+ * /project/{projectId}/unlinkTask/{sprintId}/{taskId}/{userStoryId}:
+ *  post:
+ *    description: unlink a userStory from a task
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *      - in: path
+ *        name: sprintId
+ *        schema:
+ *          type: string
+ *        description: Sprint id of the userStory to unlink
+ *      - in: path
+ *        name: taskId
+ *        schema:
+ *          type: string
+ *        description: Task id of the linked user story
+ *      - in: path
+ *        name: userStoryId
+ *        schema:
+ *          type: string
+ *        description: userStory id
+ *  responses:
+ *    200':
+ *      description: success, displays the main project page
+ */
+router.post('/project/:projectId/unlinkTask/:sprintId/:taskId/:userStoryId', ensureAuthenticated, controllerTask.unlinkTask);
 
-});
+/**
+ * @swagger
+ * /project/{projectId}/tests:
+ *  get:
+ *    description: Page displaying the tests related to the selected project
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *  responses:
+ *    200':
+ *      description: display success
+ */
+router.get('/project/:projectId/tests', ensureAuthenticated, controllerTests.displayTests);
 
-router.get('/project/:projectId/createTask', ensureAuthenticated, (req, res) => {
-    ModelProject.findOne({ _id: req.params.projectId }).then(project => {
-        res.render('createTask', {
-            project: project,
-            user: req.user
-        });
-    }).catch(err => console.log(err));
+/**
+ * @swagger
+ * /project/{projectId}/createTest:
+ *  get:
+ *    description: Display create test for a project form
+ *  parameters:
+ *      - in: path
+ *        name: id
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *  responses:
+ *    200':
+ *      description: displays the create test for a project page
+ */
+router.get('/project/:projectId/createTest', ensureAuthenticated, controllerTests.displayCreateTest);
 
-});
+/**
+ * @swagger
+ * /project/{projectId}/createTest:
+ *  post:
+ *    description: Create a test for a project
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *      - in: formData
+ *        name: name
+ *        schema:
+ *          type: string
+ *        description: test name
+ *      - in: formData
+ *        name: description
+ *        schema:
+ *          type: string
+ *        description: test description
+ *      - in: formData
+ *        name: state
+ *        schema:
+ *          type: string
+ *        description: test state
+ *      - in: formData
+ *        name: selectedUs
+ *        schema:
+ *          type: string
+ *        description: user story to link with the test
+ *  responses:
+ *    200':
+ *      description: success, displays the current project's tests page
+ */
+router.post('/project/:projectId/createTest', ensureAuthenticated, controllerTests.createTest);
 
-router.get('/project/:projectId/modifyTask/:taskId', ensureAuthenticated, (req, res) => {
-    ModelProject.findOne({ _id: req.params.projectId }).then(project => {
-        ModelTask.findOne({ _id: req.params.taskId }).then(task => {
-            res.render('modifyTask', {
-                task: task,
-                project: project,
-                user: req.user
-            });
-        }).catch(err => console.log(err));
-    })
-});
+/**
+ * @swagger
+ * /project/{projectId}/modifyTest/{testId}:
+ *  get:
+ *    description: Display modify test form
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *      - in: path
+ *        name: testId
+ *        schema:
+ *          type: string
+ *        description: Id of the test to modify
+ *  responses:
+ *    200':
+ *      description: displays the update test page
+ */
+router.get('/project/:projectId/modifyTest/:testId', ensureAuthenticated, controllerTests.displayModifyTest);
 
-router.post('/project/:projectId/modifyTask/:taskId', ensureAuthenticated, (req, res) => {
-    const description = req.body.description;
-    const developerId = req.body.developerId;
-    const state = req.body.state;
-    let errors = [];
+/**
+ * @swagger
+ * /project/{projectId}/modifyTest/{testId}:
+ *  post:
+ *    description: Updates an existing test
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *      - in: path
+ *        name: taskId
+ *        schema:
+ *          type: string
+ *        description: Id of the task
+ *      - in: formData
+ *        name: name
+ *        schema:
+ *          type: string
+ *        description: new test name
+ *      - in: formData
+ *        name: description
+ *        schema:
+ *          type: string
+ *        description: new test description
+ *      - in: formData
+ *        name: state
+ *        schema:
+ *          type: string
+ *        description: new test state
+ *      - in: formData
+ *        name: selectedUs
+ *        schema:
+ *          type: string
+ *        description: new user story id
+ *  responses:
+ *    200':
+ *      description: success, displays the current project's tests page
+ *
+ */
+router.post('/project/:projectId/modifyTest/:testId', ensureAuthenticated, controllerTests.modifyTest);
 
-    if (!state || !description || !developerId) {
-        errors.push({ msg: "Champ requis non remplis" })
-    }
-    if (state > 3 || state < 1) {
-        errors.push({ msg: "valeur non possible" });
-    }
-    if (description.length > 300) {
-        errors.push({ msg: "Description trop longue" });
-    }
-    ModelTask.updateOne({ _id: req.params.taskId },{
-        description: description,
-        developerId: developerId,
-        state: state
-    }).then(() => {
-        renderProjectPage(res,req.params.projectId);
-    }).catch(err => console.log(err));
-
-});
-
-router.post('/project/:projectId/createTask', ensureAuthenticated, (req, res) => {
-    const dev = req.body.developerId;
-    const description = req.body.description;
-    const state = req.body.state;
-    let errors = [];
-
-    if (!description || !dev || !state) {
-        errors.push({ msg: "champs requis non remplis" });
-    }
-    if (state > 3 || state < 1) {
-        errors.push({ msg: "valeur non possible" });
-    }
-    if (description.length > 300) {
-        errors.push({ msg: "Description trop longue" });
-    }
-
-    if (errors.length == 0) {
-        const newTask = new ModelTask({
-            projectId: req.params.projectId,
-            description,
-            developerId: dev,
-            state
-        });
-        newTask.save().then(task => {
-            renderProjectPage(res, req.params.projectId);
-        }).catch(err => console.log(err));
-    } else {
-        ModelProject.findOne({ _id: req.params.projectId }).then(project => {
-            res.render('createTask', {
-                errors,
-                project
-            });
-        })
-
-    }
-
-});
-
-router.get('/project/:projectId/deleteTask/:taskId', ensureAuthenticated, (req, res) => {
-    ModelTask.deleteOne({ _id: req.params.taskId }).then(()=> {
-            renderProjectPage(res,req.params.projectId);
-        }).catch(err => console.log(err));
-});
-
-function renderProjectPage(res, projectId) {
-    let noOrphanUs = false;
-
-    ModelUserStory.countDocuments({ projectId: projectId, isOrphan: true })
-        .then(numberOfOrphanUs => {
-            noOrphanUs = (numberOfOrphanUs === 0);
-        });
-
-    ModelProject.findOne({ _id: projectId })
-        .then(project => {
-            ModelUserStory.find({ projectId: projectId })
-                .then(userStorys => {
-                    ModelTask.find({ projectId: projectId }).then(task => {
-                        res.render('project', {
-                            project: project,
-                            moment: moment,
-                            orphanUs: userStorys,
-                            tasks: task,
-                            noOrphanUs: noOrphanUs
-                        });
-                    })
-
-                })
-                .catch(err => console.log("Couldn't find orphan user stories: " + err));
-        })
-        .catch(err => console.log("Couldn't find user stories: " + err));
-}
+/**
+ * @swagger
+ * /project/{projectId}/deleteTest/{testId}:
+ *  get:
+ *    description: Deletes the selected test
+ *  parameters:
+ *      - in: path
+ *        name: projectId
+ *        schema:
+ *          type: string
+ *        description: Id of the project
+ *      - in: path
+ *        name: testId
+ *        schema:
+ *          type: string
+ *        description: Id of the test
+ *  responses:
+ *    200':
+ *      description: displays the current project's tests page
+ */
+router.get('/project/:projectId/deleteTest/:testId', ensureAuthenticated, controllerTests.deleteTest);
 
 module.exports = router;

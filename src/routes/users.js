@@ -1,115 +1,98 @@
 const express = require('express');
 const router = express.Router();
-const ModelUser = require('../models/user');
-const bcrypt = require('bcryptjs');
-const passport = require('passport');
+const controllerUser = require('../controller/controller.user');
 
-function checkIfEmailInString(text) {
-    var re = /(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/;
-    return re.test(text);
-}
+/**
+ * @swagger
+ * /register:
+ *  get:
+ *    description: Page displaying the register form
+ *  responses:
+ *    200':
+ *      description: display success
+ */
+router.get('/register', controllerUser.displayRegister);
 
-router.get('/login', (req, res) => {
-    res.render('login');
-});
+/**
+ * @swagger
+ * /register:
+ *  post:
+ *    description: Register a new user
+ *  parameters:
+ *      - in: formData
+ *        name: name
+ *        schema:
+ *          type: string
+ *        description:  Name of the user
+ *      - in: formData
+ *        name: firstname
+ *        schema:
+ *          type: string
+ *        description:  Firstname of the user
+ *      - in: formData
+ *        name: email
+ *        schema:
+ *          type: string
+ *        description:  Email of the user
+ *      - in: formData
+ *        name: password
+ *        schema:
+ *          type: string
+ *        description:  Password of the user
+ *      - in: formData
+ *        name: password2
+ *        schema:
+ *          type: string
+ *        description:  Password confirmed of the user
+ *  responses:
+ *    200':
+ *      description: success, redirect to the login page
+ */
+router.post('/register', controllerUser.register);
 
-router.get('/register', (req, res) => {
-    res.render('register');
-});
+/**
+ * @swagger
+ * /login:
+ *  get:
+ *    description: Page displaying the login page
+ *  responses:
+ *    200':
+ *      description: display success
+ */
+router.get('/login', controllerUser.displayLogin);
 
-router.post('/register', (req, res) => {
-    const { name, firstname, email, password, password2 } = req.body;
-    let errors = [];
+/**
+ * @swagger
+ * /login:
+ *  post:
+ *    description: User login
+ *  parameters:
+ *      - in: formData
+ *        name: email
+ *        schema:
+ *          type: string
+ *        description:  Email of the user
+ *      - in: formData
+ *        name: password
+ *        schema:
+ *          type: string
+ *        description:  Password of the user
+ *  responses:
+ *    200':
+ *      description: success, redirect to the list of projects of the user
+ */
+router.post('/login', controllerUser.login);
 
-    if (!name || !firstname || !email || !password || !password2) {
-        errors.push({ msg: 'Champ requis non remplis' });
-    }
+/**
+ * @swagger
+ * /logout:
+ *  get:
+ *    description: User logout
+ *  responses:
+ *    200':
+ *      description: success, redirect to the login page
+ */
+router.get('/logout', controllerUser.logout);
 
-    else {
-        if (password !== password2) {
-            errors.push({ msg: 'Votre mot de passe ne correspond pas' });
-        }
-
-        if (password.length < 6 || password.length > 40) {
-            errors.push({ msg: 'La taille de votre mot de passe doit être comprise entre 6 et 40' });
-        }
-
-        if (name.length > 40) {
-            errors.push({ msg: 'Votre nom ne peut pas dépasser les 40 caractères' });
-        }
-
-        if (firstname.length > 40) {
-            errors.push({ msg: 'Votre prénom ne peut pas dépasser les 40 caractères' });
-        }
-
-        if (!checkIfEmailInString(email)) {
-            errors.push({ msg: 'Votre adresse email n\'est pas conforme' });
-        }
-    }
-
-    if (errors.length == 0) {
-        ModelUser.findOne({ email: email })
-            .then(user => {
-                if (user) {
-                    //user already exists
-                    errors.push({ msg: 'Il existe déjà un compte avec cet email' });
-                    res.render('register', {
-                        errors,
-                        name,
-                        firstname,
-                        email,
-                        password,
-                        password2
-                    });
-                } else {
-                    const newUser = new ModelUser({
-                        lastname: name,
-                        firstname,
-                        email,
-                        password
-                    });
-                    //Encrypt password using bcrypt
-                    bcrypt.genSalt(10, (err, salt) => {
-                        bcrypt.hash(newUser.password, salt, (err, hash) => {
-                            if (err) throw err;
-                            //new password hashed
-                            newUser.password = hash;
-                            newUser.save()
-                                .then(user => {
-                                    req.flash('success_msg', 'Votre compte a bien été créé !');
-                                    res.redirect('/users/login');
-
-                                })
-                                .catch(err => console.log(err));
-                        })
-                    });
-                }
-            });
-    } else {
-        res.render('register', {
-            errors,
-            name,
-            firstname,
-            email,
-            password,
-            password2
-        });
-
-    }
-});
-
-router.post('/login', (req, res, next) => {
-    passport.authenticate('local', {
-        successRedirect: '/Projects',
-        failureRedirect: '/users/login',
-        failureFlash: true
-    })(req, res, next);
-});
-
-router.get('/logout', (req, res) => {
-    req.logOut();
-    req.flash('success_msg', 'Vous vous êtes bien déconnecté');
-    res.redirect('/users/login');
-});
 
 module.exports = router;

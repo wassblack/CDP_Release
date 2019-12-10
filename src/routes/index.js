@@ -1,22 +1,30 @@
 const express = require('express');
-const ModelProject = require('../models/project');
 const router = express.Router();
+const controllerIndex = require('../controller/controller.index');
 //Must add to every resource access page
 const { ensureAuthenticated } = require('../config/authenticated');
 
-router.get('/', ensureAuthenticated, (req, res) => {
-    res.redirect('/Projects');
-});
-//Passing ensureAthenticated
-router.get('/Projects', ensureAuthenticated, (req, res) => {
-    ModelProject.find({ 'users.email': req.user.email })
-        .then(projects => {
-            res.render('index', {
-                user: req.user,
-                projects: projects
-            });
-        }).catch(err => console.log(err));
+/**
+ * @swagger
+ * /:
+ *  get:
+ *    description: Redirect to /Projects
+ *  responses:
+ *    200':
+ *      description: redirection success
+ */
+router.get('/', ensureAuthenticated, controllerIndex.redirectToIndex);
+
+/**
+ * @swagger
+ * /Projects:
+ *  get:
+ *    description: Display the list of projects in which the user contributes
+ *  responses:
+ *    200':
+ *      description: display success
+ */
+router.get('/Projects', ensureAuthenticated, controllerIndex.displayIndex);
 
 
-});
 module.exports = router;

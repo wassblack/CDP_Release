@@ -1,39 +1,130 @@
 <% if(typeof tasks == 'undefined' || tasks.length == 0) { %>
-<div class="card-header">Taches</div>
-<div class="card-body">
+<h3 class="card-header">Liste des tâches</h3>
+<div class="card-body" id="taskSection">
     <h5 class="card-title">Vous n'avez pas de tâches.</h5>
     <form action="/project/<%= project.id %>/createTask" method="GET">
-        <button type="submit" class="btn btn-outline-primary">Ajouter une nouvelle tâche</button>
+        <button type="submit" class="btn btn-outline-primary" id="createTaskButton">Ajouter une nouvelle tâche</button>
     </form>
 </div>
 <%} else {%>
-    <h5 class="card-header">Tâches existantes</h5>
-    <table class="table table-hover">
+<h3 class="card-header">Liste des tâches</h3>
+<form action="/project/<%= project.id %>/createTask" method="GET">
+    <button type="submit" class="btn btn-outline-secondary" style="width:100%;"id="createTaskButton" >Ajouter une nouvelle tâche</button>
+</form>
+
+<div class="jumbotron" id="taskSection">
+    <table class="table table-hover" id="tasksTable">
         <thead>
             <tr>
                 <th scope="col">Description</th>
                 <th scope="col">Développeur</th>
                 <th scope="col">État</th>
+                <th scope="col">Issues liées</th>
+                <th scope="col">Actions</th>
             </tr>
         </thead>
-            <tbody>
-                
-                <tr class="table-light">
-                    <% tasks.forEach(function (task) { %>
-                    <td><%= task.description %></td>
-                    <td><%= task.developerId %></td>
-                    <td><%= task.state %></td>
-                    <td>
-                        <a href="/project/<%= project.id %>/modifyTask/<%= task.id %>"><i class="fas fa-edit fa-lg"></i></a>
-                        <a href="/project/<%= project.id %>/deleteTask/<%= task.id %>"><i class="fa fa-trash fa-lg" aria-hidden="true"></i></a>                   
-                    </td>
-                </tr>
-                <% });%>
-            </tbody>
-            <tfoot>
-                <form action="/project/<%= project.id %>/createTask" method="GET">
-                    <button type="submit" class="btn btn-secondary">Ajouter une nouvelle tâche</button>
-                </form>
-            </tfoot>
+        <tbody>
+
+            <% tasks.forEach(function (task) { %>
+            <% let classCss = parseInt(task.state) <= 2 ? (parseInt(task.state) == 1 ? "table-danger" : "table-info") : "table-success" ;%>
+            <tr class=<%= classCss %>>
+                <td><%= task.description %></td>
+                <td><%= task.developerId %></td>
+                <td><% if (task.state === 1) {%>TODO<%} else if (task.state === 2) {%>ON GOING<%} else {%> DONE<%}%>  </td>
+                <td style="background: none; min-width: 290px">
+                    <% project.sprints.forEach(function(sprint) {
+                        sprint.userStories.forEach(function(userStory) {
+                            userStory.tasks.forEach(function(linkedTask) {
+                                if (linkedTask.id === task.id) { %>
+                    <form
+                        action="/project/<%= project.id %>/unlinkTask/<%= sprint.id %>/<%= task.id %>/<%= userStory.id %>"
+                        method="POST" style="display: inline;">
+                        <input type="hidden" name="linkedUserstory" value="<%= JSON.stringify(userStory) %>">
+                        <%= userStory.id %>
+                        <button type="submit" class="unlinkTask" style=" padding: 0px; border: none; background: none;">
+                            <small><i class="fa fa-unlink fa-lg"></i></small>
+                        </button>
+                    </form>
+                    <% }
+                            })
+                        })
+                    }); %>
+                </td>
+                <td>
+                    <a href="/project/<%= project.id %>/modifyTask/<%= task.id %>" class="modifyTaskLink"><small><i class="fas fa-edit fa-lg"></i></small></a>
+                    <a href="/project/<%= project.id %>/deleteTask/<%= task.id %>" class="deleteTaskLink"><small><i class="fa fa-trash fa-lg" aria-hidden="true"></i></small>
+                           </a>
+                    <a href data-toggle="modal" data-target="#modalTask<%= task.id %>" class="linkTask">
+                        <small><i class="fa fa-link fa-lg"aria-hidden="true"></i></small></a>
+                          
+                </td>
+            </tr>
+            <% });%>
+        </tbody>
     </table>
+</div>
+
+<% tasks.forEach(function (task) { %>
+<div class="modal fade" id="modalTask<%= task.id %>">
+    <div class="modal-dialog modal-lg" role="document">
+        <form action="/project/<%= project.id %>/linkTask/<%= task.id %>" method="POST" class="mr-auto">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Lier une tâche à une user story</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">Identifiant</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Difficulté</th>
+                                <th scope="col">Priorité</th>
+                                <th scope="col">Sélection</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="table-light">
+                                <% project.sprints.forEach(function (sprint) { %>
+                                <% sprint.userStories.forEach(function (userStory) { %>
+                                <% let alreadyLinked = false;
+                                        for (let linkedTask of userStory.tasks) {
+                                            if (linkedTask.id === task.id) {
+                                                alreadyLinked = true;
+                                                break;
+                                            }
+                                        }
+                                        if (!alreadyLinked) { %>
+                                <td><%= userStory._id %></td>
+                                <td><%= userStory.description %></td>
+                                <td><%= userStory.difficulty %></td>
+                                <td><%= userStory.priority %></td>
+                                <td>
+                                    <div class="custom-control custom-checkbox" id="checkBoxAddUserstory">
+                                        <input type="checkbox" class="custom-control-input"
+                                            id="customCheck<%= task.id %><%= userStory.id %>" name="selectedUs"
+                                            value="<%= JSON.stringify(userStory) %>" unchecked>
+                                        <label class="custom-control-label"
+                                            for="customCheck<%= task.id %><%= userStory.id %>"></label>
+                                    </div>
+                                </td>
+                                <% } %>
+                            </tr>
+                            <% });%>
+                            <% });%>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary" id="submitLinkTask">Lier les tâches sélectionnées à cette tâche</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<% });%>
+
 <%}%>
