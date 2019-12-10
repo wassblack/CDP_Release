@@ -3,7 +3,7 @@
 - BERRARI Wassim
 - PICHON Alexis
 - SENTOUT Nicolas
-- 
+
 # Objectif
 Réaliser un outil pour gérer la production logicielle (à la Scrum)
 
