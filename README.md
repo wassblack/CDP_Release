@@ -1,5 +1,4 @@
-# CDP_Release [![Build Status](https://travis-ci.com/wassblack/CDP_Dev.svg?token=8p9S55nWMBR4phqphErn&branch=master)](https://travis-ci.com/wassblack/CDP_Dev)
-
+# CDP_Release [![Build Status](https://travis-ci.com/wassblack/CDP_Release.svg?branch=master)](https://travis-ci.com/wassblack/CDP_Release)
 # Membres du groupe
 - BERRARI Wassim
 - PICHON Alexis
