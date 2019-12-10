@@ -19,9 +19,9 @@ Vous pouvez télécharger cette version du projet [ici](https://github.com/wassb
 ## Version 0.3.0 (10/12/19)
 Vous pouvez télécharger cette version du projet ici.
 * Issues réalisées : 13, 14, 15, 16
-* Architecture de l'application :
-* Documentation administrateur : 
-* Documentation utilisateur : 
+* Architecture de l'application : [doc-code_0.3.0.pdf](https://github.com/wassblack/CDP_Release/files/3944592/doc-code_v0.3.0.pdf)
+* Documentation administrateur : [doc-admin_0.3.0.pdf](https://github.com/wassblack/CDP_Release/files/3944594/doc-admin_v0.3.0.pdf)
+* Documentation utilisateur : [doc-user_0.3.0.pdf](https://github.com/wassblack/CDP_Release/files/3944595/doc-user_v0.3.0.pdf)
 
 ## Installation et lancement de ScrumIt
 
